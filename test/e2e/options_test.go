@@ -16,6 +16,7 @@ type E2EOptions struct {
 	KubeContext    string
 	KubeConfig     string
 	StartAPIServer bool
+	TestOnCluster  bool
 }
 
 var (
@@ -23,6 +24,7 @@ var (
 		ControllerOptions: server.NewControllerOptions(),
 		KubeConfig:        filepath.Join(homedir.HomeDir(), ".kube", "config"),
 		StartAPIServer:    false,
+		TestOnCluster:     false,
 	}
 )
 
@@ -32,6 +34,7 @@ func init() {
 	flag.StringVar(&options.KubeConfig, "kubeconfig", "", "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
 	flag.StringVar(&options.KubeContext, "kube-context", "", "Name of kube context")
 	flag.BoolVar(&options.StartAPIServer, "webhook", options.StartAPIServer, "Start API server for webhook")
+	flag.BoolVar(&options.TestOnCluster, "cluster-test", options.TestOnCluster, "Run test in cluster")
 	enableLogging()
 	flag.Parse()
 }

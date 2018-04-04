@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: stash-apiserver
+  namespace: ${STASH_NAMESPACE}
+  labels:
+    app: test-stash
+spec:
+  ports:
+  - name: admission
+    port: 443
+    targetPort: 8443
+  selector:
+    app: test-stash
+---
+# register as aggregated apiserver
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1alpha1.admission.stash.appscode.com
+  labels:
+    app: test-stash
+spec:
+  insecureSkipTLSVerify: true
+  group: admission.stash.appscode.com
+  groupPriorityMinimum: 1000
+  versionPriority: 15
+  service:
+    name: stash-local-apiserver
+    namespace: ${STASH_NAMESPACE}
+  version: v1alpha1
+---
+# register as aggregated apiserver
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1alpha1.repositories.stash.appscode.com
+  labels:
+    app: test-stash
+spec:
+  insecureSkipTLSVerify: true
+  group: repositories.stash.appscode.com
+  groupPriorityMinimum: 1000
+  versionPriority: 15
+  service:
+    name: stash-local-apiserver
+    namespace: ${STASH_NAMESPACE}
+  version: v1alpha1

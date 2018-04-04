@@ -36,6 +36,7 @@ else
 fi
 
 export STASH_NAMESPACE=stash-dev
+export TEST_ON_CLUSTER=0
 export KUBE_CA=$($ONESSL get kube-ca | $ONESSL base64)
 while test $# -gt 0; do
     case "$1" in
@@ -59,14 +60,25 @@ while test $# -gt 0; do
             fi
             shift
             ;;
+        --cluster-test*)
+            val=`echo $1 | sed -e 's/^[^=]*=//g'`
+            if [ "$val" = "true" ]; then
+                export TEST_ON_CLUSTER = 1
+            fi
+            shift
+            ;;
          *)
             echo $1
             exit 1
             ;;
     esac
 done
+if [ "$TEST_ON_CLUSTER" -eq 1 ]; then
+    cat $REPO_ROOT/hack/dev/apiregistration-cluster.yaml | envsubst | kubectl apply -f -
+else
+    cat $REPO_ROOT/hack/dev/apiregistration.yaml | envsubst | kubectl apply -f -
+fi
 
-cat $REPO_ROOT/hack/dev/apiregistration.yaml | envsubst | kubectl apply -f -
 cat $REPO_ROOT/hack/deploy/mutating-webhook.yaml | envsubst | kubectl apply -f -
 cat $REPO_ROOT/hack/deploy/validating-webhook.yaml | envsubst | kubectl apply -f -
 rm -f ./onessl

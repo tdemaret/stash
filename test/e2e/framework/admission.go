@@ -16,14 +16,16 @@ import (
 	kapi "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1"
 )
 
-func (f *Framework) NewTestStashOptions(kubeConfigPath string, controllerOptions *srvr.ControllerOptions) *srvr.StashOptions {
+func (f *Framework) NewTestStashOptions(kubeConfigPath string, controllerOptions *srvr.ControllerOptions,isClusterTest bool) *srvr.StashOptions {
 	opt := srvr.NewStashOptions(os.Stdout, os.Stderr)
-	opt.RecommendedOptions.Authentication.RemoteKubeConfigFile = kubeConfigPath
-	opt.RecommendedOptions.Authentication.SkipInClusterLookup = true
-	opt.RecommendedOptions.Authorization.RemoteKubeConfigFile = kubeConfigPath
-	opt.RecommendedOptions.CoreAPI.CoreAPIKubeconfigPath = kubeConfigPath
-	opt.RecommendedOptions.SecureServing.BindPort = 8443
-	opt.RecommendedOptions.SecureServing.BindAddress = net.ParseIP("127.0.0.1")
+	if !isClusterTest{
+		opt.RecommendedOptions.Authentication.RemoteKubeConfigFile = kubeConfigPath
+		opt.RecommendedOptions.Authentication.SkipInClusterLookup = true
+		opt.RecommendedOptions.Authorization.RemoteKubeConfigFile = kubeConfigPath
+		opt.RecommendedOptions.CoreAPI.CoreAPIKubeconfigPath = kubeConfigPath
+		opt.RecommendedOptions.SecureServing.BindPort = 8443
+		opt.RecommendedOptions.SecureServing.BindAddress = net.ParseIP("127.0.0.1")
+	}
 	opt.ControllerOptions = controllerOptions
 	opt.StdErr = os.Stderr
 	opt.StdOut = os.Stdout
@@ -31,9 +33,10 @@ func (f *Framework) NewTestStashOptions(kubeConfigPath string, controllerOptions
 	return opt
 }
 
-func (f *Framework) StartAPIServerAndOperator(kubeConfigPath string, controllerOptions *srvr.ControllerOptions) {
+func (f *Framework) StartAPIServerAndOperator(kubeConfigPath string, controllerOptions *srvr.ControllerOptions,isClusterTest bool) {
+	defer GinkgoRecover()
 	sh := shell.NewSession()
-	args := []interface{}{"--namespace", f.Namespace()}
+	args := []interface{}{"--namespace", f.Namespace(),"--cluster-test",isClusterTest}
 	SetupServer := filepath.Join("..", "..", "hack", "dev", "setup-server.sh")
 
 	By("Creating API server and webhook stuffs")
@@ -43,7 +46,7 @@ func (f *Framework) StartAPIServerAndOperator(kubeConfigPath string, controllerO
 
 	By("Starting Server and Operator")
 	stopCh := genericapiserver.SetupSignalHandler()
-	stashOptions := f.NewTestStashOptions(kubeConfigPath, controllerOptions)
+	stashOptions := f.NewTestStashOptions(kubeConfigPath, controllerOptions,isClusterTest)
 	err = stashOptions.Run(stopCh)
 	Expect(err).ShouldNot(HaveOccurred())
 }
