@@ -263,6 +263,10 @@ purge:
 	@cd ../installer; \
 	./deploy/stash.sh --uninstall --purge
 
+.PHONY: docs
+docs:
+	./hack/gendocs/make.sh
+
 .PHONY: dev
 dev: gen fmt push
 
