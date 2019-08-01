@@ -362,11 +362,11 @@ func TestRunParallelDump(t *testing.T) {
 	largeContent := make([]byte, 104857600)
 	fileContent = string(largeContent)
 
+	defer cleanup(tempDir)
 	w, err := setupTest(tempDir)
 	if err != nil {
 		t.Error(err)
 	}
-	defer cleanup(tempDir)
 
 	backupOpts := newParallelBackupOptions()
 	backupOutput, err := w.RunParallelBackup(backupOpts, 2)
@@ -386,11 +386,13 @@ func TestRunParallelDump(t *testing.T) {
 	}
 	dumpOutput, err := w.ParallelDump(dumpOptions, 2)
 	if err != nil {
+		t.Log(err)
 		t.Error(err)
 	}
 
 	// verify that all host has been restored successfully
 	for i := range dumpOutput.HostRestoreStats {
+		t.Logf("Host: %s, Phase: %s", dumpOutput.HostRestoreStats[i].Hostname,dumpOutput.HostRestoreStats[i].Phase)
 		assert.Equal(t, dumpOutput.HostRestoreStats[i].Phase, api_v1beta1.HostRestoreSucceeded)
 	}
 }
