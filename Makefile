@@ -239,6 +239,7 @@ manifests: gen-crds label-crds
 
 .PHONY: gen
 gen: clientset openapi manifests
+	@$(MAKE) fmt --no-print-directory
 
 fmt: $(BUILD_DIRS)
 	@docker run                                                 \
@@ -470,7 +471,7 @@ purge:
 	./deploy/stash.sh --uninstall --purge
 
 .PHONY: dev
-dev: gen fmt push
+dev: gen push
 
 .PHONY: verify
 verify: verify-modules verify-gen
@@ -484,9 +485,9 @@ verify-modules:
 	fi
 
 .PHONY: verify-gen
-verify-gen: gen fmt
+verify-gen: gen
 	@if !(git diff --exit-code HEAD); then \
-		echo "files are out of date, run make gen fmt"; exit 1; \
+		echo "files are out of date, run make gen"; exit 1; \
 	fi
 
 .PHONY: ci
